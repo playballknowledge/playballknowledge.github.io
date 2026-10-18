@@ -199,7 +199,7 @@ body:not(.bk-before-entry) #bk-gate,body:not(.bk-before-entry) #bk-daily-welcome
 #bk-profile-view #bk-edit-teams{align-self:flex-start;margin-top:12px}
 .bk-profile-team-badges{display:flex;flex-wrap:wrap;align-items:center;gap:7px;min-width:0}
 .bk-team-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid #467354;border-radius:999px;background:#20382b;color:#f0fff4;font-size:12px;max-width:100%}
-.bk-team-badge img{width:25px;height:25px;object-fit:contain;flex-shrink:0}
+.bk-team-badge img{width:25px;height:25px;object-fit:contain;flex-shrink:0}.bk-team-badge .bk-team-logo-fallback{font-size:10px;font-weight:800;color:#fff;background:#345d43;border-radius:50%;min-width:25px;height:25px;display:inline-flex;align-items:center;justify-content:center}.bk-team-badge .bk-team-logo-fallback[hidden]{display:none!important}
 .bk-team-badge b{font-size:10px;color:#a7d9ba}
 .bk-team-badge .bk-team-badge-text{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:190px}
 .bk-profile-no-teams{color:var(--muted);font-size:12px}
@@ -245,9 +245,14 @@ const teamInputs=Object.fromEntries(leagues.map(l=>[l,document.getElementById('b
 let current=null,profileLoadSerial=0,setupSerial=0,setupChecking=false,setupMode='onboarding',setupForUser=null,setupCheckedFor=null;
 let favoriteCache={};
 const emailUsername=u=>u?.email?.split('@')[0]||'Guest';
+const mlbTeamIds=[109,133,144,110,111,112,145,113,114,115,116,117,118,108,119,146,158,142,121,147,143,134,135,137,136,138,139,140,141,120];
+const nbaTeamIds=[1610612737,1610612738,1610612751,1610612766,1610612741,1610612739,1610612742,1610612743,1610612765,1610612744,1610612745,1610612754,1610612746,1610612747,1610612763,1610612748,1610612749,1610612750,1610612740,1610612752,1610612760,1610612753,1610612755,1610612756,1610612757,1610612758,1610612759,1610612761,1610612762,1610612764];
 const logoUrl=(league,name)=>{
  const index=teamNames[league].indexOf(name);
- return index<0?null:'https://a.espncdn.com/i/teamlogos/'+league+'/500/'+logoCodes[league][index]+'.png';
+ if(index<0)return null;
+ if(league==='mlb')return 'https://www.mlbstatic.com/team-logos/'+mlbTeamIds[index]+'.svg';
+ if(league==='nba')return 'https://cdn.nba.com/logos/nba/'+nbaTeamIds[index]+'/primary/L/logo.svg';
+ return 'https://a.espncdn.com/i/teamlogos/nfl/500/'+logoCodes.nfl[index]+'.png';
 };
 function renderTeamBadges(teams){
  badges.replaceChildren();
@@ -258,9 +263,11 @@ function renderTeamBadges(teams){
   shown++;
   const badge=document.createElement('span');badge.className='bk-team-badge';badge.title=league.toUpperCase()+': '+name;
   const category=document.createElement('b');category.textContent=league.toUpperCase();badge.appendChild(category);
-  const logo=document.createElement('img');logo.src=logoUrl(league,name);logo.alt=name+' logo';logo.loading='lazy';
-  logo.onerror=()=>{logo.remove()};
-  badge.appendChild(logo);
+  const logo=document.createElement('img');logo.alt=name+' logo';logo.loading='lazy';
+  const fallback=document.createElement('span');fallback.className='bk-team-logo-fallback';fallback.textContent=logoCodes[league][teamNames[league].indexOf(name)].toUpperCase();fallback.hidden=true;
+  logo.onerror=()=>{logo.remove();fallback.hidden=false};
+  logo.src=logoUrl(league,name);
+  badge.appendChild(logo);badge.appendChild(fallback);
   const text=document.createElement('span');text.className='bk-team-badge-text';text.textContent=name;badge.appendChild(text);
   badges.appendChild(badge);
  }
